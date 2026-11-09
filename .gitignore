@@ -1,0 +1,12 @@
+# Lista blanca: solo se versionan el codigo y la documentacion.
+# Nunca subir imagenes, logs, manifiestos ni carpetas de vuelos.
+*
+!.gitignore
+!README.md
+!copiar_sentera.py
+!verificar_copia.py
+!docs/
+!docs/**
+.DS_Store
+__pycache__/
+*.pyc
