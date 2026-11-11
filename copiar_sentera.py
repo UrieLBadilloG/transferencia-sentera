@@ -45,6 +45,8 @@ REINTENTOS = 3
 ESPERA_REINTENTO = (5, 15, 30)   # segundos antes de cada reintento
 MAX_FALLOS_SEGUIDOS = 5          # si fallan tantos archivos seguidos, se aborta (cable/camara desconectada)
 TAM_MIN_JPEG = 4096              # una imagen real de la Sentera pesa decenas de MB; menos de esto = entrada danada
+VEL_ESTIMADA = 60 * 1048576      # bytes/s medidos en copias reales (55-70 MB/s), solo para el estimado inicial
+CAMARA_IP = '192.168.42.1'
 
 
 class ErrorVerificacion(IOError):
@@ -160,6 +162,47 @@ def detectar_fuente(dest_root):
         if vuelos:
             candidatos.append((ruta, vuelos))
     return candidatos
+
+
+def montaje_camara():
+    """Punto de montaje SMB de la camara (p. ej. /Volumes/data), leido de `mount` sin tocar /Volumes."""
+    try:
+        salida = subprocess.run(['mount'], capture_output=True, text=True, timeout=10).stdout
+    except (OSError, subprocess.SubprocessError):
+        return None
+    patron = re.compile(r'^//(?:[^@\s]*@)?%s/\S+ on (.+?) \(smbfs' % re.escape(CAMARA_IP))
+    for linea in salida.splitlines():
+        m = patron.match(linea)
+        if m:
+            return m.group(1)
+    return None
+
+
+def listar(source):
+    """Salida para la app: 'FUENTE\\t<ruta>' y una linea por vuelo:
+    'VUELO\\t<nombre>\\t<n imagenes>\\t<tamano>\\t<primera imagen>' (la primera se usa como miniatura)."""
+    fuente = os.path.abspath(source) if source else montaje_camara()
+    if not fuente or not os.path.isdir(fuente):
+        print('SIN_CAMARA')
+        return 2
+    print('FUENTE\t%s' % fuente)
+    for nombre, ruta in buscar_vuelos(fuente):
+        n = tam = 0
+        primera = ''
+        for dirpath, dirnames, archivos in os.walk(ruta):
+            dirnames[:] = sorted(d for d in dirnames if not ignorado(d))
+            for f in sorted(archivos):
+                if ignorado(f):
+                    continue
+                n += 1
+                if not primera and IMG_RE.match(f):
+                    primera = os.path.join(dirpath, f)
+                try:
+                    tam += os.path.getsize(os.path.join(dirpath, f))
+                except OSError:
+                    pass
+        print('VUELO\t%s\t%d\t%s\t%s' % (nombre, n, humano(tam), primera), flush=True)
+    return 0
 
 
 # --------------------------------------------------------------------- copia
@@ -295,7 +338,11 @@ def main():
                     help='Sin carpeta de fecha: <dest>/<vuelo>/rgb/... (como arrastrar la carpeta en Finder)')
     ap.add_argument('--dry-run', action='store_true', help='Solo mostrar el plan, no copiar')
     ap.add_argument('--log-dir', default=LOG_DEFAULT)
+    ap.add_argument('--listar', action='store_true', help='Solo listar los vuelos de la camara (lo usa la app)')
     args = ap.parse_args()
+
+    if args.listar:
+        return listar(args.source)
 
     dest_root = os.path.abspath(args.dest)
     partes = os.path.realpath(dest_root).split(os.sep)
@@ -353,6 +400,7 @@ def main():
     log('')
     log('Vuelos en la camara: %d' % len(vuelos))
     pendientes_bytes = 0
+    pendientes_n = 0
     for nombre, _ in vuelos:
         items = por_vuelo.get(nombre, [])
         if not items:
@@ -364,6 +412,7 @@ def main():
             estados[it['estado']] = estados.get(it['estado'], 0) + 1
             if it['estado'] not in ('presente', 'invalido en camara'):
                 pendientes_bytes += it['size']
+                pendientes_n += 1
         rango, faltan = huecos_secuencia([os.path.basename(i['src']) for i in items])
         extra = ''
         if rango:
@@ -372,7 +421,9 @@ def main():
             nombre, len(items), humano(sum(i['size'] for i in items)),
             ', '.join('%s=%d' % kv for kv in sorted(estados.items())), extra))
     total_bytes = sum(i['size'] for i in plan)
-    log('Total fuente: %d archivos, %s. Por copiar (estimado): %s' % (len(plan), humano(total_bytes), humano(pendientes_bytes)))
+    log('Total fuente: %d archivos, %s. Por copiar (estimado): %d archivos, %s' % (
+        len(plan), humano(total_bytes), pendientes_n, humano(pendientes_bytes)))
+    log('Tiempo estimado (a ~%d MB/s): %s' % (VEL_ESTIMADA // 1048576, duracion(pendientes_bytes / VEL_ESTIMADA)))
 
     libre = shutil.disk_usage(os.path.dirname(dest_root) if not os.path.exists(dest_root) else dest_root).free
     log('Espacio libre en destino: %s' % humano(libre))
@@ -459,9 +510,11 @@ def main():
                     transcurrido = time.time() - t0
                     vel = bytes_copiados / max(transcurrido, 1e-6)
                     restante = (pendientes_bytes - bytes_copiados) / vel if vel > 0 else 0
-                    log('%s  OK%s %s %.0f MB/s  | resta ~%s' % (
+                    faltan_n = max(pendientes_n - ok - len(fallidos), 0)
+                    log('%s  OK%s %s en %.2f s (%.0f MB/s) | lleva %s | faltan %d img, ~%s' % (
                         etiqueta, '' if estado == 'nuevo' else ' (reemplaza: %s)' % estado,
-                        humano(st.st_size), st.st_size / dt / 1048576.0, duracion(max(restante, 0))))
+                        humano(st.st_size), dt, st.st_size / dt / 1048576.0,
+                        duracion(transcurrido), faltan_n, duracion(max(restante, 0))))
                     exito = True
                     break
                 except KeyboardInterrupt:

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:">
+<title>Transferir Sentera</title>
+<link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+
+<!-- Barra lateral -->
+<aside id="lateral">
+  <div class="arrastre"></div>
+
+  <div class="seccion">Dispositivo</div>
+  <div id="camara" class="item">
+    <span class="insignia verde">
+      <svg viewBox="0 0 16 16"><path d="M2.6 4.6h2l.9-1.4h5l.9 1.4h2a1.2 1.2 0 0 1 1.2 1.2v6a1.2 1.2 0 0 1-1.2 1.2H2.6a1.2 1.2 0 0 1-1.2-1.2v-6a1.2 1.2 0 0 1 1.2-1.2Z" fill="#fff"/><circle cx="8" cy="8.6" r="2.4" fill="currentColor"/><circle cx="8" cy="8.6" r="1.4" fill="#fff" opacity=".35"/></svg>
+    </span>
+    <div class="txt">
+      <span>Sentera 65R</span>
+      <small id="camara-estado">Buscando…</small>
+    </div>
+    <span id="camara-punto" class="punto"></span>
+  </div>
+
+  <div class="seccion">Copiar a</div>
+  <div id="discos"></div>
+  <div id="carpeta-elegida"></div>
+  <div id="btn-destino" class="item clic">
+    <span class="insignia gris">
+      <svg viewBox="0 0 16 16"><path d="M1.6 4.2a1 1 0 0 1 1-1h3.5l1.3 1.4h5.9a1 1 0 0 1 1 1v6.2a1 1 0 0 1-1 1H2.6a1 1 0 0 1-1-1Z" fill="#fff"/></svg>
+    </span>
+    <div class="txt"><span>Otra carpeta…</span></div>
+  </div>
+
+  <div class="relleno"></div>
+
+  <div id="uso" class="uso oculto">
+    <div class="uso-tit"><span id="uso-nombre"></span><span id="uso-libre" class="tenue"></span></div>
+    <div class="uso-barra"><div id="uso-ocupado"></div><div id="uso-nuevo"></div></div>
+    <div id="uso-nota" class="uso-nota"></div>
+  </div>
+</aside>
+
+<!-- Contenido -->
+<div id="contenido">
+  <div id="barra-herr">
+    <div class="titulos">
+      <div class="titulo">Sentera 65R</div>
+      <div id="subtitulo" class="sub">Buscando…</div>
+    </div>
+    <div class="herr">
+      <button id="btn-refrescar" class="icono" title="Volver a leer la cámara">
+        <svg viewBox="0 0 16 16"><path d="M13 8a5 5 0 1 1-1.5-3.6M13 2.5v2.4h-2.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button id="btn-todos" class="texto">Seleccionar todo</button>
+      <button id="btn-copiar" class="capsula" disabled>Copiar</button>
+    </div>
+  </div>
+
+  <div id="area">
+    <div id="cargando" class="vacio">
+      <div class="spinner"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div id="cargando-titulo" class="vacio-titulo">Buscando la cámara</div>
+      <div id="cargando-detalle" class="vacio-detalle"></div>
+    </div>
+    <div id="rejilla" class="rejilla oculto"></div>
+  </div>
+
+  <pre id="log" class="oculto"></pre>
+
+  <footer id="estado-barra">
+    <div class="izq">
+      <div id="estado-1"></div>
+      <div id="estado-2" class="sub"></div>
+    </div>
+    <div class="der">
+      <div id="progreso" class="progreso oculto"><div id="barra"></div></div>
+      <button id="btn-log" class="mini">Registro</button>
+      <button id="btn-cancelar" class="mini oculto">Detener</button>
+      <button id="btn-abrir" class="mini oculto">Mostrar en Finder</button>
+      <button id="btn-listo" class="mini primario oculto">Listo</button>
+    </div>
+  </footer>
+</div>
+
+<script src="renderer.js"></script>
+</body>
+</html>

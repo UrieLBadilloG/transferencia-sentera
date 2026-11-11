@@ -29,6 +29,22 @@ La Sentera 65R **no se monta como disco**: al conectarla por USB-C aparece como 
 
 Si el Mac no la detecta, ver `docs/PROBLEMAS_Y_SOLUCIONES.md`.
 
+## Interfaz (Electron)
+
+```bash
+cd interfaz
+npm install      # solo la primera vez
+npm start        # v2: rejilla con miniaturas (como Fotos > Importar)
+npm run v1       # v1: tabla
+```
+
+Las dos versiones usan el mismo `main.js` y la misma copia; solo cambia la pantalla (`interfaz/v1/` y `interfaz/v2/`). La v2 hace una miniatura de la primera foto de cada vuelo con `sips` (solo lee la cámara), la guarda en `~/Library/Application Support/transferir-sentera/miniaturas/` y no genera miniaturas mientras se copia.
+
+1. La ventana abre aunque la cámara no esté conectada y muestra un loader. Cada 3 s revisa si la cámara responde en `192.168.42.1:445`. Mientras no responda, no intenta conectarse, así que Finder no muestra errores.
+2. Cuando la cámara responde, la monta sola (usuario `sentera`, sin contraseña) y lista los vuelos con imágenes y tamaño.
+3. Se marcan los vuelos y se elige el destino. Cada vuelo queda en `<destino>/<vuelo>/rgb/...` con el mismo nombre que en la cámara.
+4. La copia la hace `copiar_sentera.py --plano` (imagen por imagen, verificada). La ventana muestra el tiempo estimado total, el tiempo que lleva, el que falta y cuánto tardó cada imagen. "Detener" la corta de forma segura.
+
 ## Uso rápido
 
 ```bash

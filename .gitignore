@@ -5,6 +5,9 @@
 !README.md
 !copiar_sentera.py
 !verificar_copia.py
+!interfaz/
+!interfaz/**
+interfaz/node_modules/
 !docs/
 !docs/**
 .DS_Store

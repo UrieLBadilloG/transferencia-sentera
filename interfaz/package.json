@@ -1,0 +1,14 @@
+{
+  "name": "transferir-sentera",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Interfaz para copiar vuelos de la Sentera 65R con copiar_sentera.py",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "v1": "SENTERA_UI=v1 electron ."
+  },
+  "devDependencies": {
+    "electron": "^45.2.3"
+  }
+}
